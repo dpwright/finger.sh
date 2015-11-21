@@ -1,1 +1,45 @@
-This is a test
+The proof-of-concept of finger.sh is working!  It has a number of issues, but
+you can get the idea.  The core idea is:
+
+1. Be able to use the standard command-line 'finger' tool to query almost any
+   developer in the world, with
+2. No user sign-up.
+
+How do we do this?  By piggybacking off someone else's work, of course!
+Namely, github's.  If you have a github account, you have a finger.sh account.
+Currently, the way that it works is that when you make a query, for example,
+
+    finger dpwright@finger.sh
+
+finger.sh will look up the user "dpwright" on github, and displays their user
+information.  If that person has a repository called "finger.sh" containing the
+standard ".project", ".plan" files, those will be displayed also.  That's it!
+
+So what are the problems I mentioned earlier?  Well, it basically all comes
+down to rate limits.  Currently each request to finger.sh takes three queries
+on the github API (one for the user information, one for the .project, and one
+for the .plan).  Since github only allows up to 60 queries an hour for
+unauthenticated users, we will soon run out!  There are a number of things we
+can do to mitigate this, including creating an authenticated user to make these
+querues (which ups our limit to 5000 per hour), caching the information we
+receive, and subscribing to the repository so that we only update the .plan and
+.project files when they are already updated.
+
+There are also some other things it would be nice to have, like the ability to
+put .plan and .project files in any of your repositories and have those
+reflected, or being able to use .plan.md instead of .plan for nicer display in
+github.
+
+Here's the current TODO list for finger.sh:
+
+- Generate an OAUTH key and make queries using that
+- Set up a database to start caching information
+- Store user information the first time it's accessed
+- Set up an HTTP server to receive notifications when repositories are updated
+- Automatically subscribe to all of a user's repositories when they're first
+  queried.  If their user information / repo list is updated, resubscribe
+
+I suspect that it is more likely that many unique users will finger the same
+people (for example lots of people fingering Linus Torvalds) than that each
+user will finger many unique people, so caching will make a really big
+difference to the amount we have to hit github's API.
